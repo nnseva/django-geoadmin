@@ -3,7 +3,8 @@
 # Django Geo Admin
 
 The [Django Geo Admin List](https://github.com/nnseva/django-geoadmin) package provides an admin list view
-for the geo-based data of the GeoDjango. It requires django-leaflet and uses leaflet to show the map.
+for the geo-based data of the GeoDjango. It requests [django-leaflet](https://github.com/makinacorpus/django-leaflet)
+in requirements, but doesn't use it really.
 
 ## Installation
 
@@ -26,6 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     ...
+    'leaflet',
     'geoadmin',
     ...
 ]
@@ -90,7 +92,7 @@ class WaypointAdmin(GeoAdminMixin, LeafletGeoAdminMixin, ModelAdmin):
 
 ## Geo Admin customization
 
-Every Geo Admin may be customized using parameters as well as and method overrides.
+Every Geo Admin may be customized using parameters as well as method overrides.
 
 ### Geo Admin customization parameters
 
@@ -107,12 +109,12 @@ All content under the key is passed to the page javascript code. The following
 keys have a meaning for it:
 
 - `icon` - contains parameters to create a
-  [`L.BeautifyIcon.Icon`][https://github.com/masajid390/BeautifyMarker) instance for any point, the
+  [L.BeautifyIcon.Icon](https://github.com/masajid390/BeautifyMarker) instance for any point, the
   whole field, or part of the `GeometryCollection` field
 - `style` - contains [parameters](https://leafletjs.com/reference-1.6.0.html#path-option) to pass
   to the `style` option for the feature representing fields containing vector graphics
 
-The [`L.BeautifyIcon.Icon`][https://github.com/masajid390/BeautifyMarker) instantiated on the map
+The [L.BeautifyIcon.Icon](https://github.com/masajid390/BeautifyMarker) instantiated on the map
 has the following attributes:
 
 - `icon` Name of icon you want to show on marker
@@ -157,7 +159,7 @@ The modified admin has two additional admin URLs and correspondent view methods:
 - `/admin/../geoadmin_api/` URL processed by the `geoadmin_api` function returns the geoadmin JSON API
 
 These methods may be overriden, but sometimes you can override detail API
-functions instead to achieve your needs, see below.
+functions to achieve your needs instead, see below.
 
 ### Geo Admin API overrides
 
@@ -174,23 +176,22 @@ The following methods of the Admin class may be overriden to modify output:
 - `def geoadmin_params(self, request, queryset, fields)` - extracts request parameters
 - `def geoadmin_max_window_size(self, request, queryset)` - returns max window size
 - `def geoadmin_initial(self, request, queryset, fields)` - returns initial position
-  to use when no any parameters are passed to the request (should never be happened, except
-  direct or external request to the geoadmin API)
+  to use when no any parameters are passed to the request (*should never be happened, except direct or external request to the geoadmin API*)
 - `def geoadmin_list_objects(self, request, queryset, fields, south, west, north, east)`
   returns final `list` of objects to be returned
 - `def geoadmin_json(self, request, object, field_names)` - translates the passed object
   to the structured value to be returned
 - `def geoadmin_url(self, request, object)` - returns a reference URL for the object
   to be shown on the map to get link to the object shown
-- `def geoadmin_geojson(self, request, object, field_names)` - returns GeoJSON representation
-  of the objects
+- `def geoadmin_geojson(self, request, object, field_names)` - returns GeoJSON content
+  of the object
 - `def geoadmin_geojson_feature(self, request, object, field_name)` - returns GeoJSON Feature
   representing one field of the object
 - `def geoadmin_geojson_feature_geometry(self, request, object, field_name)` - returns the
-  GeoJSON Feature Geometry part
+  GeoJSON Feature geometry part
 - `def geoadmin_geojson_feature_properties(self, request, object, field_name)` - returns
   the GeoJSON Feature poperties attribute
 - `def geoadmin_geojson_feature_options(self, request, object, field_name)` - returns the
-  the GeoJSON Feature `icon` and `style` options as described for `geoadmin_feature_options`
+  GeoJSON Feature `icon` and `style` options as described for `geoadmin_feature_options`
 - `def geoadmin_title(self, request, object)` - returns a title for the object
 - `def geoadmin_fields(self, request)` - returns list of field names

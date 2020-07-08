@@ -61,7 +61,7 @@
             text: '{% trans "Permanent Link" %}',
             layers: layers,
             useLocation: true,
-            useLocalStorage: true,
+            useLocalStorage: false,  // is not working as required, preferring stored pars on the new window
         })).addTo(map).setPosition('bottomleft');
         L.control.mousePosition().addTo(map).setPosition('bottomright');
     }

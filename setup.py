@@ -40,5 +40,6 @@ setup(
     install_requires=[
         "django",
         "django-leaflet",
+        "geojson",
     ],
 )

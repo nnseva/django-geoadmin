@@ -10,6 +10,8 @@ from django.contrib.auth.models import User
 from django.contrib.gis.geos import Point
 from django.test import Client, TestCase as _TestCase
 
+from geoadmin import __version__ as version
+
 
 class TestCase(_TestCase):
     """Compatibility fix"""
@@ -94,7 +96,7 @@ class ModuleTest(TestCase):
                 "west": self.waypoints[0].waypoint.x - 0.0001,
                 "north": self.waypoints[0].waypoint.y + 0.0001,
                 "east": self.waypoints[0].waypoint.x + 0.0001,
-                "version": '0.0.1',
+                "version": version,
             },
             "objects": [
                 {

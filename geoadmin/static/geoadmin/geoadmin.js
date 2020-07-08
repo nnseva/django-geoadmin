@@ -94,18 +94,25 @@ GeoObjectListLayer = L.LayerGroup.extend({
                         return geoJsonFeature.properties.options.style;
                     },
                     onEachFeature: function(feature, layer) {
-                        layer.bindTooltip(
-                            feature['properties']['verbose_name']
-                        )
+                        layer.bindTooltip(that.featureTooltipContent(options, feature))
                     }
                 },
             ).bindPopup(
                 L.responsivePopup().setContent(
-                    '<a href="'+options.url+'" target="_blank">'+
-                    options.title+
-                    '</a><b/>',
+                     that.geoObjectPopupContent(options)
                 )
             )
         );
+    },
+    featureTooltipContent: function(options, feature) {
+        return '<b>' + options.title + '</b><br/>' +
+            '<ul><li>' + feature.properties.verbose_name +
+            '</ul>';
+    },
+    geoObjectPopupContent: function(options) {
+        var content = '<a href="'+options.url+'" target="_blank">'+
+                    options.title+
+                    '</a><b/><br/>';
+        return content;
     },
 })

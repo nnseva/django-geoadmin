@@ -1,11 +1,14 @@
 import json
 
+import geojson
+
 from django import forms
 from django.contrib.gis.geos import MultiPoint, Polygon
 from django.db.models import Q
 from django.http import HttpResponse
 from django.template.response import TemplateResponse
 from django.urls import reverse
+from django.utils.html import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 from .options import get_option
@@ -159,15 +162,20 @@ class GeoAdminMixin(object):
 
     def geoadmin_geojson_feature(self, request, o, field_name):
         """Geoadmin API object geojson feature extractor"""
-        return {
-            'type': 'Feature',
-            'geometry': self.geoadmin_geojson_feature_geometry(request, o, field_name),
-            'properties': self.geoadmin_geojson_feature_properties(request, o, field_name)
-        }
+        geometry = self.geoadmin_geojson_feature_geometry(request, o, field_name)
+        properties = self.geoadmin_geojson_feature_properties(request, o, field_name) or []
+        if geometry:
+            return {
+                'type': 'Feature',
+                'properties': properties,
+                **({'geometry': geometry} if geometry else {})
+            }
 
     def geoadmin_geojson_feature_geometry(self, request, o, field_name):
         """Geoadmin API object geojson feature geometry extractor"""
-        return json.loads(getattr(o, field_name).json)
+        val = getattr(o, field_name)
+        if val:
+            return json.loads(getattr(o, field_name).json)
 
     def geoadmin_geojson_feature_properties(self, request, o, field_name):
         """Geoadmin API object geojson feature properties extractor"""
@@ -252,3 +260,21 @@ class GeoAdminMixin(object):
                 get_option('media.js.geoadmin', ''),
             ) + add_js
         )
+
+    def get_readonly_fields(self, request, obj=None):
+        return ['geoadmin_link'] + list(super().get_readonly_fields(request) or [])
+
+    def geoadmin_link(self, obj, request=None):
+        field_names = self.geoadmin_fields(request)
+        js = self.geoadmin_geojson(request, obj, field_names)
+        coords = list(geojson.utils.coords(js))
+        if not coords:
+            return _("No coordinates")
+        coords = coords[0]
+        info = (self.model._meta.app_label, self.model._meta.model_name)
+        return mark_safe('<a href="%s#lat=%s&lon=%s&zoom=%s" target="_blank">%s</a>' % (
+            reverse('admin:%s_%s_geoadmin_view' % info),
+            coords[1], coords[0], 18,
+            str(obj)
+        ))
+    geoadmin_link.short_description = _('See on the map')

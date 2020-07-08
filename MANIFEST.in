@@ -1,0 +1,1 @@
+recursive-include geoadmin *.py *.html *.js *.css

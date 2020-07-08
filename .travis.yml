@@ -1,0 +1,22 @@
+language: python
+matrix:
+    include:
+        - python: 3.6
+          env: TOXENV="py36--django{2.0,2.1,2.2,3.0},syntax"
+        - python: 3.7
+          env: TOXENV="py37--django{2.0,2.1,2.2,3.0}"
+services:
+  - postgresql
+install:
+  - pip install tox
+script:
+  - tox
+env:
+  global:
+  - DATABASE_USER=postgres
+  - DATABASE_PASSWORD=
+  - DATABASE_NAME=test
+  - DATABASE_HOST=
+sudo: false
+notifications:
+    email: false

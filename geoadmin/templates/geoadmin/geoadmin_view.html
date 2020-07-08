@@ -1,0 +1,73 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls static admin_list leaflet_tags l10n static %}
+{% block extrahead %}
+{{ block.super }}
+<style>{% block map_css %}
+    #{{ id_map }} { width: 100%; height: calc(100vh - 240px); }
+    {% endblock map_css %}
+</style>
+{% endblock %}
+{% block content %}
+  <div id="content-main">
+    {% block object-tools %}
+        <ul class="object-tools">
+          {% url cl.opts|admin_urlname:'changelist' as change_list_url %}
+          <li>
+            <a href="{{ change_list_url }}" class="link">
+              {{ cl.opts.verbose_name_plural|capfirst }}
+            </a>
+          {% block object-tools-items %}
+          {% endblock %}
+        </ul>
+    {% endblock %}
+    {% block map %}
+<div id="{{ id_map }}" class="leaflet-container-default"></div>
+<script>
+(function () {
+    function loadmap() {
+        map = L.map('{{ id_map }}', {
+            maxZoom: 19,
+            zoomControl: false,
+            attributionControl: false,
+        }).setView([0, 0], 1);
+
+        var osm = L.tileLayer('//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '<a title="{% trans 'Open Street Map Tiles' %}" href="https://www.openstreetmap.org/">OSM</a>',
+            id: 'osm',
+        }).addTo(map);
+
+        var objects = new GeoObjectListLayer({
+            url: '{{ fetch_url }}',
+            attribution:
+            {% if attribution %}
+                '{{ attribution }}'
+            {% else %}
+                '<a title="{{ cl.opts.verbose_name_plural|capfirst }} data" href="{% url cl.opts|admin_urlname:'changelist' %}" target="_blank">{{ cl.opts.verbose_name_plural|capfirst }}</a>'
+            {% endif %},
+        }).addTo(map);
+
+        var layers = L.control.layers({'OSM':osm},{'{{ cl.opts.verbose_name_plural|capfirst }}': objects},{}).addTo(map);
+        L.control.attribution({
+            prefix:
+                '<a title="A JS Library for interactive maps" href="https://leafletjs.com/" target="_blank">Leaflet v.'+L.version+'</a> | ' +
+                '<a title="{% trans 'Data Layer Engine' %}" href="https://github.com/nnseva/django-geoadmin" target="_blank">GeoAdmin v.{{ version }}</a>'
+        }).addTo(map).setPosition('bottomright');
+        L.control.scale().addTo(map).setPosition('bottomleft');
+        L.control.zoom({
+            zoomInTitle: '{% trans "Zoom In" %}',
+            zoomOutTitle: '{% trans "Zoom Out" %}',
+        }).addTo(map).setPosition('topleft');
+        (new L.Control.Permalink({
+            text: '{% trans "Permanent Link" %}',
+            layers: layers,
+            useLocation: true,
+            useLocalStorage: true,
+        })).addTo(map).setPosition('bottomleft');
+        L.control.mousePosition().addTo(map).setPosition('bottomright');
+    }
+    loadmap();
+})();
+</script>
+    {% endblock map %}
+  </div>
+{% endblock %}

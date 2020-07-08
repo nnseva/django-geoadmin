@@ -116,7 +116,7 @@ class ModuleTest(TestCase):
                                 "properties": {
                                     "name": "waypoint",
                                     "verbose_name": "Waypoint",
-                                    "options": WaypointAdmin.geoadmin_field_options['waypoint']
+                                    "options": WaypointAdmin.geoadmin_feature_options['waypoint']
                                 }
                             }
                         ]

@@ -2,6 +2,8 @@
 
 # Django Geo Admin
 
+![Screen Example](https://github.com/nnseva/django-geoadmin/raw/master/screen_example.png)
+
 The [Django Geo Admin List](https://github.com/nnseva/django-geoadmin) package provides an admin list view
 for the geo-based data of the GeoDjango. It requests [django-leaflet](https://github.com/makinacorpus/django-leaflet)
 in requirements, but doesn't use it really.

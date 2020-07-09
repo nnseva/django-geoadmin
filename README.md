@@ -1,5 +1,4 @@
-[![Build Status](https://api.travis-ci.com/nnseva/django-geoadmin.svg?branch=master)](https://travis-ci.com/github/nnseva/django-geoadmin)
-
+[![Build Status](https://api.travis-ci.com/nnseva/django-geoadmin.svg?branch=master)](https://travis-ci.com/github/nnseva/django-geoadmin) [![codecov](https://codecov.io/gh/nnseva/django-geoadmin/branch/master/graph/badge.svg)](https://codecov.io/gh/nnseva/django-geoadmin)
 # Django Geo Admin
 
 ![Screen Example](https://github.com/nnseva/django-geoadmin/raw/master/screen_example.png)

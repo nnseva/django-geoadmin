@@ -4,21 +4,13 @@ import json
 
 from six import text_type
 from tests.admin import WaypointAdmin
-from tests.models import DeliveryJob, Waypoint
+from tests.models import Building, DeliveryJob, Waypoint
 
 from django.contrib.auth.models import User
 from django.contrib.gis.geos import Point
-from django.test import Client, TestCase as _TestCase
+from django.test import Client, TestCase
 
 from geoadmin import __version__ as version
-
-
-class TestCase(_TestCase):
-    """Compatibility fix"""
-    if not hasattr(_TestCase, 'assertRegex'):
-        assertRegex = _TestCase.assertRegexpMatches
-    if not hasattr(_TestCase, 'assertNotRegex'):
-        assertNotRegex = _TestCase.assertNotRegexpMatches
 
 
 class ModuleTest(TestCase):
@@ -33,7 +25,7 @@ class ModuleTest(TestCase):
         self.waypoints = [
             Waypoint.objects.create(
                 name='Waypoint Test %s' % i,
-                waypoint=Point([i / 100, (10 - i) / 100 + 0.5])
+                waypoint=Point([50 + i / 100, 50 + (10 - i) / 100 + 0.5])
             )
             for i in range(1, 10)
         ]
@@ -41,8 +33,8 @@ class ModuleTest(TestCase):
         self.delivery_jobs = [
             DeliveryJob.objects.create(
                 name='Delivery Test %s' % i,
-                pickup_point=Point([i / 100, (10 - i) / 100]),
-                dropoff_point=Point([(10 - i) / 100, i / 100]),
+                pickup_point=Point([50 + i / 100, 50 + (10 - i) / 100]),
+                dropoff_point=Point([50 + (10 - i) / 100, 50 + i / 100]),
                 kind='wood',
             )
             for i in range(1, 10)
@@ -156,3 +148,64 @@ class ModuleTest(TestCase):
         self.assertEqual(content['meta']['total'], 9)
         self.assertEqual(set([f['properties']['name'] for f in content['objects'][0]['geo']['features']]), {'pickup_point', 'dropoff_point'})
         self.assertEqual(set([p['pk'] for p in content['objects']]), set([w.pk for w in self.delivery_jobs[1:4] + self.delivery_jobs[5:8]]))
+
+    def test_006_instance_details_refers_geoadmin(self):
+        """Test whether the instance detail admin page refers geoadmin map"""
+        c = Client()
+        c.login(username='user', password='password')
+        wp = self.waypoints[0]
+        response = c.get('/admin/tests/waypoint/%s/change/' % wp.pk)
+        self.assertIn('/admin/tests/waypoint/geoadmin#lat=%s&lon=%s' % (wp.waypoint.y, wp.waypoint.x), text_type(response.content))
+
+    def test_007_geoadmin_api_default(self):
+        """Test whether the geoadmin api returns some reasonable defaults if requested without parameters"""
+        c = Client()
+        c.login(username='user', password='password')
+        response = c.get('/admin/tests/waypoint/geoadmin_api')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['content-type'], 'application/json')
+        content = json.loads(response.content)
+        self.assertIn('meta', content)
+        self.assertIn('objects', content)
+        self.assertEqual(content['meta']['total'], 9)
+        self.assertLess(content['meta']['count'], 9)
+        self.assertEqual(len(content['objects']), content['meta']['count'])
+
+    def test_008_geoadmin_api_restrict_big_area(self):
+        """Test whether the geoadmin api restricts big area to the customizable reasonable values"""
+        c = Client()
+        c.login(username='user', password='password')
+        response = c.get('/admin/tests/waypoint/geoadmin_api?south=40&north=60&west=45&east=55')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['content-type'], 'application/json')
+        content = json.loads(response.content)
+        self.assertIn('meta', content)
+        self.assertIn('warning', content['meta'])
+        self.assertIn('objects', content)
+        self.assertEqual(content['meta']['total'], 9)
+        self.assertGreater(content['meta']['south'], 40)
+        self.assertLess(content['meta']['north'], 60)
+        self.assertGreater(content['meta']['west'], 45)
+        self.assertLess(content['meta']['east'], 55)
+
+    def test_009_null_value_processed(self):
+        """Test whether the null value is processed fine"""
+        c = Client()
+        c.login(username='user', password='password')
+        b = Building.objects.create(name='qwerty')
+        response = c.get('/admin/tests/building/%s/change/' % b.pk)
+        self.assertIn('No coordinates', text_type(response.content))
+
+    def test_010_no_objects_processed(self):
+        """Test whether the geoadmin works properly with empty queryset"""
+        c = Client()
+        c.login(username='user', password='password')
+        response = c.get('/admin/tests/building/geoadmin_api')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['content-type'], 'application/json')
+        content = json.loads(response.content)
+        self.assertIn('meta', content)
+        self.assertIn('objects', content)
+        self.assertEqual(content['meta']['total'], 0)
+        self.assertEqual(content['meta']['count'], 0)
+        self.assertEqual(len(content['objects']), content['meta']['count'])
